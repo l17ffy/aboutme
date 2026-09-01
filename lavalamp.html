@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Background</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: auto; 
+            color: #FFFFFF;
+        }
+        
+        /* Робимо канвас фіксованим фоном */
+        #term {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1; 
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="term"></canvas>
+
+    <script>
+        // ==========================================
+        // НАЛАШТУВАННЯ (ЗМІНЮЙ ЦІ ЗНАЧЕННЯ)
+        // ==========================================
+        const CONFIG_BG_COLOR = "#0d0d14";   // Колір фону
+        const CONFIG_LAVA_COLOR = "#5c243c"; // Колір лави
+        const CONFIG_CHAR = "▒▓█";             // Символ лави
+        // ==========================================
+
+        document.body.style.backgroundColor = CONFIG_BG_COLOR;
+
+        // --- Constants & Enums (Mapped from termbox) ---
+        const TB_BLACK = 0, TB_RED = 1, TB_GREEN = 2, TB_YELLOW = 3;
+        const TB_BLUE = 4, TB_MAGENTA = 5, TB_CYAN = 6, TB_WHITE = 7;
+        const TB_BOLD = 8;
+        const TB_TRUECOLOR_DEFAULT = null;
+        const FLT_MAX = Number.MAX_VALUE;
+        const MIN_NBALLS = 5;
+        const MAX_NBALLS = 20;
+
+        const colorsMap = {
+            0: "#000000", 1: "#CC0000", 2: "#4E9A06", 3: "#C4A000",
+            4: "#3465A4", 5: "#75507B", 6: "#06989A", 7: "#D3D7CF",
+            8: "#555753", 9: "#EF2929", 10: "#8AE234", 11: "#FCE94F",
+            12: "#729FCF", 13: "#AD7FA8", 14: "#34E2E2", 15: "#EEEEEC"
+        };
+        const standardColors = [TB_WHITE, TB_RED, TB_YELLOW, TB_BLUE, TB_GREEN, TB_MAGENTA, TB_CYAN, TB_BLACK];
+
+        class Ball {
+            constructor() {
+                this.x = 0; this.y = 0;
+                this.vx = 0; this.vy = 0;
+                this.heat = 0;
+                this.restTicks = 0;
+            }
+        }
+
+        // --- State Variables ---
+        let pallete = new Array(11).fill(null);
+        let baseColor = [255, 0, 0];
+        let baseColor2 = [0, 0, 255]; 
+        let gradient1 = 0;
+        let gradient2 = 0;
+
+        let custom = CONFIG_CHAR; 
+        let custom2 = null;
+        
+        let color = CONFIG_LAVA_COLOR; 
+        let color2 = CONFIG_LAVA_COLOR;
+        let party = 0;
+        let nballs = 10;
+        let speedMult = 5;
+        let rim = 0; 
+        let contained = 0;
+        let gravityMode = 0; 
+        let gravityStrength = 0.12;
+        let buoyancyStrength = 0.22;
+        let heatGain = 0.035;
+        let heatLoss = 0.0045;
+        let bounceDamp = 0.85;
+        let radiusIn = 110;
+        let radius;
+        let margin;
+        let sumConst;
+        let sumConst2;
+        let maxX, maxY;
+        let speed;
+        let balls = Array.from({ length: MAX_NBALLS }, () => new Ball());
+
+        // --- Canvas Setup ---
+        const canvas = document.getElementById('term');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        
+        let fontWidth = 10;
+        let fontHeight = 18;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            init_params();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- Logic Functions ---
+        function init_params() {
+            maxX = Math.floor(canvas.width / fontWidth);
+            maxY = Math.floor(canvas.height / fontHeight) * 2;
+            
+            let displaySpeedMult = 11 - speedMult;
+            speed = (((1 / (maxX + maxY)) * 1000000) + 10000) * displaySpeedMult;
+            radius = (radiusIn * radiusIn + (maxX * maxY)) / 15000;
+
+            margin = contained ? radius * 10 : 0;
+            sumConst = 0.0225;
+            sumConst2 = sumConst * (1 + (0.25 * rim));
+
+            custom2 = custom;
+            color2 = color;
+
+            if (custom && custom.length > 1 && rim) {
+                custom2 = custom.substring(1);
+            }
+
+            for (let i = 0; i < MAX_NBALLS; i++) {
+                balls[i].x = Math.floor(Math.random() * (maxX - 2 * margin) + margin);
+                balls[i].y = Math.floor(Math.random() * (maxY - 2 * margin) + margin);
+                balls[i].vx = (Math.random() < 0.5) ? -1.0 : 1.0;
+                balls[i].vy = (Math.random() < 0.5) ? -1.0 : 1.0;
+                balls[i].heat = Math.floor(Math.random() * 101) / 100.0;
+                balls[i].restTicks = Math.floor(Math.random() * 30);
+            }
+
+            if (gradient1) {
+                if (gradient2) set_pallete2();
+                else set_pallete();
+            }
+        }
+
+        function next_color(current) {
+            for (let i = 0; i < 8; i++) {
+                if ((current === standardColors[i]) || (current === (standardColors[i] | TB_BOLD))) {
+                    return standardColors[(i + 1) % 8];
+                }
+            }
+            return standardColors[0];
+        }
+
+        function fix_rim_color() {
+            color2 = color;
+        }
+
+        function set_random_colors(level) {
+            if (level === 1 || level === 3) color = standardColors[Math.floor(Math.random() * 7)];
+            if (level === 2 || level === 3) color2 = standardColors[Math.floor(Math.random() * 7)];
+            fix_rim_color();
+        }
+
+        function set_pallete() {
+            let avgColor = Math.floor((baseColor[0] + baseColor[1] + baseColor[2]) / 3);
+            let blackfactor = [0, 0, 0, 0, 0];
+            let whitefactor = [0, 0, 0, 0, 0];
+            for (let i = 1; i < 6; i++) {
+                blackfactor[i - 1] = Math.floor((6 - i) * avgColor / 5);
+                whitefactor[i - 1] = Math.floor(i * (255 - avgColor) / 5);
+            }
+
+            for (let i = 0; i < 5; i++) {
+                let r, g, b;
+                let factor = (1 - (blackfactor[i] / avgColor));
+                r = Math.floor(baseColor[0] * factor);
+                g = Math.floor(baseColor[1] * factor);
+                b = Math.floor(baseColor[2] * factor);
+                pallete[i] = `rgb(${r},${g},${b})`;
+
+                r = Math.floor(baseColor[0] + (255 - baseColor[0]) * whitefactor[i] / (255 - avgColor));
+                g = Math.floor(baseColor[1] + (255 - baseColor[1]) * whitefactor[i] / (255 - avgColor));
+                b = Math.floor(baseColor[2] + (255 - baseColor[2]) * whitefactor[i] / (255 - avgColor));
+                pallete[i + 6] = `rgb(${r},${g},${b})`;
+            }
+            pallete[5] = `rgb(${baseColor[0]},${baseColor[1]},${baseColor[2]})`;
+        }
+
+        function set_pallete2() {
+            for (let i = 0; i < 11; i++) {
+                let t = i / 10;
+                let r = Math.floor((1 - t) * baseColor[0] + t * baseColor2[0]);
+                let g = Math.floor((1 - t) * baseColor[1] + t * baseColor2[1]);
+                let b = Math.floor((1 - t) * baseColor[2] + t * baseColor2[2]);
+                pallete[i] = `rgb(${r},${g},${b})`;
+            }
+        }
+
+        function resolveColor(c) {
+            if (typeof c === 'string') return c; 
+            return colorsMap[c] || "#FFFFFF"; 
+        }
+
+        function tb_printf(i, j, fg, bg, char) {
+            let x = i * fontWidth;
+            let y = Math.floor(j * fontHeight); 
+
+            if (bg !== TB_TRUECOLOR_DEFAULT && bg !== null && bg !== 0) {
+                ctx.fillStyle = resolveColor(bg);
+                ctx.fillRect(x, y, fontWidth, fontHeight);
+            }
+            
+            if (fg !== TB_TRUECOLOR_DEFAULT && fg !== null && fg !== 0) {
+                ctx.fillStyle = resolveColor(fg);
+                ctx.font = `${fontHeight}px monospace`;
+                ctx.textBaseline = 'top';
+                ctx.fillText(char, x, y);
+            }
+        }
+
+        // --- Event Handling ---
+        window.addEventListener('keydown', (e) => {
+            const key = e.key;
+            if (key === '-' || key === '_') {
+                if (speedMult < 10) speedMult++;
+            } else if (key === '+' || key === '=') {
+                if (speedMult > 1) speedMult--;
+            } else if (key === 'm' || key === 'M') {
+                if (nballs + 1 <= MAX_NBALLS) nballs++;
+            } else if (key === 'l' || key === 'L') {
+                if (nballs - 1 >= MIN_NBALLS) nballs--;
+            } else if (key === 'i') {
+                if (radiusIn + 5 <= 150) {
+                    radiusIn += 5;
+                    radius = (radiusIn * radiusIn + (maxX * maxY)) / 15000;
+                    margin = contained ? radius * 10 : 0;
+                }
+            } else if (key === 'd') {
+                if (radiusIn - 5 >= 100) {
+                    radiusIn -= 5;
+                    radius = (radiusIn * radiusIn + (maxX * maxY)) / 15000;
+                    margin = contained ? radius * 10 : 0;
+                }
+            } else if (key === 'c') {
+                color = next_color(color);
+                fix_rim_color();
+            } else if (key === 'p') {
+                party = (party + 1) % 4;
+            } else if (key === 'G') {
+                gravityMode = gravityMode ? 0 : 1;
+            }
+            
+            let displaySpeedMult = 11 - speedMult;
+            speed = (((1 / (maxX + maxY)) * 1000000) + 10000) * displaySpeedMult;
+        });
+
+        // --- Main Loop ---
+        function loop() {
+            // Physics
+            for (let i = 0; i < nballs; i++) {
+                if (gravityMode) {
+                    let minY = margin;
+                    let maxYf = maxY - margin - 1;
+                    let topZone = minY + 6.0;
+                    let bottomZone = maxYf - 6.0;
+
+                    if (balls[i].restTicks > 0) {
+                        balls[i].restTicks--;
+                        balls[i].vy = 0.0;
+                        balls[i].heat -= heatLoss * 2.0;
+                    } else {
+                        if (balls[i].y > bottomZone) balls[i].heat += heatGain;
+                        else balls[i].heat -= heatLoss;
+
+                        if (balls[i].y < topZone) balls[i].heat -= heatLoss * 1.5;
+                        balls[i].vy += gravityStrength - buoyancyStrength * balls[i].heat;
+                    }
+
+                    if (balls[i].heat < 0.0) balls[i].heat = 0.0;
+                    if (balls[i].heat > 1.0) balls[i].heat = 1.0;
+
+                    balls[i].vx *= 0.995;
+                    balls[i].vy *= 0.997;
+                }
+
+                let nextX = balls[i].x + balls[i].vx;
+                let nextY = balls[i].y + balls[i].vy;
+                let minX = margin;
+                let maxXf = maxX - margin - 1;
+                let minY = margin;
+                let maxYf = maxY - margin - 1;
+
+                if (balls[i].vy > 2.5) balls[i].vy = 2.5;
+                if (balls[i].vy < -2.5) balls[i].vy = -2.5;
+
+                if (nextX > maxXf) {
+                    balls[i].x = maxXf;
+                    balls[i].vx = -balls[i].vx;
+                    if (gravityMode) balls[i].vx *= bounceDamp;
+                } else if (nextX < minX) {
+                    balls[i].x = minX;
+                    balls[i].vx = -balls[i].vx;
+                    if (gravityMode) balls[i].vx *= bounceDamp;
+                } else {
+                    balls[i].x = nextX;
+                }
+
+                if (nextY > maxYf) {
+                    balls[i].y = maxYf;
+                    if (gravityMode) {
+                        if (balls[i].restTicks === 0 && balls[i].vy > 0.4) {
+                            balls[i].heat = 0.0;
+                            balls[i].restTicks = 15 + Math.floor(Math.random() * 45);
+                        }
+                        balls[i].vy = 0.0;
+                    } else {
+                        balls[i].vy = -Math.abs(balls[i].vy);
+                    }
+                } else if (nextY < minY) {
+                    balls[i].y = minY;
+                    if (gravityMode) balls[i].vy = 0.0;
+                    else balls[i].vy = Math.abs(balls[i].vy);
+                } else {
+                    balls[i].y = nextY;
+                }
+
+                if (Math.abs(balls[i].vx) < 0.15) {
+                    balls[i].vx = (balls[i].vx < 0 ? -0.15 : 0.15);
+                }
+            }
+
+            // Render
+            ctx.fillStyle = CONFIG_BG_COLOR;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < maxX; i++) {
+                for (let j = 0; j < Math.floor(maxY / 2); j++) {
+                    let sum = [0, 0];
+
+                    for (let j2 = 0; j2 < (!custom ? 2 : 1); j2++) {
+                        for (let k = 0; k < nballs; k++) {
+                            let y = j * 2 + j2;
+                            let dx = i - balls[k].x;
+                            let dy = y - balls[k].y;
+                            let dist_squared = dx * dx + dy * dy;
+                            
+                            if (dist_squared === 0) {
+                                sum[j2] += FLT_MAX;
+                            } else {
+                                sum[j2] += (radius * radius) / dist_squared;
+                            }
+                        }
+                    }
+
+                    if (custom) {
+                        let charToDraw = null;
+                        let fgColor = null;
+
+                        if (sum[0] > sumConst) {
+                            charToDraw = custom2;
+                            fgColor = color2;
+                        }
+                        
+                        if (rim && sum[0] > sumConst2) {
+                            charToDraw = custom;
+                            fgColor = color;
+                        }
+                        
+                        if (charToDraw !== null) {
+                            tb_printf(i, j, fgColor, 0, charToDraw);
+                        }
+                    }
+                }
+            }
+
+            if (party > 0) {
+                set_random_colors(party);
+            }
+
+            setTimeout(loop, speed / 1000);
+        }
+
+        // Initialize and start
+        resizeCanvas();
+        loop();
+    </script>
+</body>
+</html>
