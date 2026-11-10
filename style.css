@@ -195,7 +195,8 @@ h2 {
 
 p, li {
     font-size: 1.2rem;
-    line-height: 1.4;
+    line-height: 1.65;
+    letter-spacing: 0.03em;
 }
 
 ul {
@@ -320,7 +321,7 @@ ul {
 }
 
 .track-num {
-    opacity: 0.6;
+    opacity: 0.9;
 }
 
 /* --- Іконки робочого столу --- */
@@ -514,8 +515,8 @@ ul {
 .terminal-list a::before {
     content: "C:\\LINKS>";
     margin-right: 10px;
-    opacity: 0.6;
-    font-size: 1rem;
+    opacity: 0.9;
+    font-size: 1.15rem;
 }
 
 .terminal-list a .arrow {
@@ -563,8 +564,8 @@ ul {
 .prompt-line::before {
     content: "C:\\LINKS>";
     margin-right: 10px;
-    opacity: 0.6;
-    font-size: 1rem;
+    opacity: 0.9;
+    font-size: 1.15rem;
 }
 .cursor {
     width: 9px;
