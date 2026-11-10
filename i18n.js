@@ -41,9 +41,12 @@
         var saved = null;
         try { saved = localStorage.getItem(STORAGE_KEY); } catch (e) {}
         if (SUPPORTED.indexOf(saved) !== -1) return saved;
-        var nav = (navigator.languages && navigator.languages[0]) || navigator.language || '';
-        nav = String(nav).toLowerCase().slice(0, 2);
-        return SUPPORTED.indexOf(nav) !== -1 ? nav : 'uk';
+        var list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ''];
+        for (var i = 0; i < list.length; i++) {
+            var code = String(list[i]).toLowerCase().slice(0, 2);
+            if (SUPPORTED.indexOf(code) !== -1) return code;
+        }
+        return 'uk';
     }
 
     function apply(lang) {
