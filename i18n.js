@@ -17,7 +17,7 @@
             'exp.egidio': "Волонтерю в Сант'Еджідіо",
             'int.h': 'ІНТЕРЕСИ Й ХОБІ',
             'int.music': '<strong>Музика:</strong> альтернативний рок, інді, пост-панк, нойз-рок, шугейз, емо, емо-рівайвл, Midwest emo і скримо; розбираю бас-табулатури та експериментую зі звуком.',
-            'int.gaming': '<strong>Ігри:</strong> ретро-ігри та ритм-ігри. Улюблене: osu!, Guitar Hero, Hatsune Miku: Project DIVA, Taiko no Tatsujin, World of Warcraft (WoW) і Team Fortress 2 (TF2).',
+            'int.gaming': '<strong>Ігри:</strong> ретро-ігри та ритм-ігри. Улюблені ігри це osu!, Guitar Hero, Project DIVA, Rhythm Heaven, Taiko no Tatsujin, WarioWare, World of Warcraft і Team Fortress 2.',
             'lang.label': 'Мова'
         },
         en: {
@@ -32,7 +32,7 @@
             'exp.egidio': "Volunteering at Sant'Egidio",
             'int.h': 'INTERESTS & HOBBIES',
             'int.music': '<strong>Music:</strong> Alternative rock, indie, post-punk, noise rock, shoegaze, emo, emo revival, Midwest emo, and screamo; working with bass tabs and sound experimentation.',
-            'int.gaming': '<strong>Gaming:</strong> Retro gaming and rhythm games. Favorite titles: osu!, Guitar Hero, Hatsune Miku: Project DIVA, Taiko no Tatsujin, World of Warcraft (WoW), and Team Fortress 2 (TF2).',
+            'int.gaming': '<strong>Gaming:</strong> Retro gaming and rhythm games. Favorite games: osu!, Guitar Hero, Project DIVA, Rhythm Heaven, Taiko no Tatsujin, WarioWare, World of Warcraft, and Team Fortress 2.',
             'lang.label': 'Language'
         }
     };
