@@ -780,3 +780,54 @@ ul {
         gap: 10px;
     }
 }
+
+/* --- Перемикач мови UK | EN --- */
+.lang-switch {
+    display: flex;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.lang-btn {
+    background: #0D0D15;
+    color: #ac3232;
+    border: 2px solid #ac3232;
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    padding: 4px 8px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 0;
+    touch-action: manipulation;
+}
+
+.lang-btn + .lang-btn {
+    border-left-width: 0;
+}
+
+.lang-btn.active {
+    background-color: #ac3232;
+    color: #0D0D15;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .lang-btn:hover {
+        background-color: #ac3232;
+        color: #0D0D15;
+    }
+}
+
+.lang-btn:focus-visible {
+    outline: 2px solid #ac3232;
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    .lang-switch { margin-right: 6px; }
+    .lang-btn { font-size: 1rem; padding: 3px 6px; }
+}
+
+@media (pointer: coarse) {
+    .lang-btn { min-height: 44px; }
+}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -13,7 +13,7 @@
 <body>
 
     <!-- --- ТУТ ПІДКЛЮЧАЄТЬСЯ ТВІЙ HTML ФОН --- -->
-    <iframe src="lavalamp.html" class="background-frame" title="Background animation" aria-hidden="true" tabindex="-1"></iframe>
+    <iframe src="lavalamp.html" class="background-frame" title="Background animation" data-i18n-title="bg.frame" aria-hidden="true" tabindex="-1"></iframe>
 
     <!-- ===== Стейдж: вся композиція (іконки + вікна) центрується як єдине ціле ===== -->
     <div class="desktop-stage">
@@ -32,26 +32,26 @@
         <div class="window-body">
             <header>
                 <h1>ROMAN (L17FFY)</h1>
-                <p>FUTURE SOCIAL WORKER | HUMANIST | VOLUNTEER | BASS PLAYER</p>
+                <p data-i18n="about.tagline">FUTURE SOCIAL WORKER | HUMANIST | VOLUNTEER | BASS PLAYER</p>
             </header>
 
             <section>
-                <h2>ABOUT ME</h2>
-                <p>Future social worker and humanist, passionate about making a positive impact. I love vintage and retro gear, play the bass guitar, collect physical music media like CDs and cassettes, and love photography.</p>
+                <h2 data-i18n="about.h">ABOUT ME</h2>
+                <p data-i18n="about.text">Future social worker and humanist, passionate about making a positive impact. I love vintage and retro gear, play the bass guitar, collect physical music media like CDs and cassettes, and love photography.</p>
             </section>
 
             <section>
-                <h2>EXPERIENCE & VOLUNTEERING</h2>
+                <h2 data-i18n="exp.h">EXPERIENCE & VOLUNTEERING</h2>
                 <ul>
-                    <li>Volunteering at Caritas</li>
-                    <li>Volunteering at Sant'Egidio</li>
+                    <li data-i18n="exp.caritas">Volunteering at Caritas</li>
+                    <li data-i18n="exp.egidio">Volunteering at Sant'Egidio</li>
                 </ul>
             </section>
 
             <section>
-                <h2>INTERESTS & HOBBIES</h2>
-                <p><strong>Music:</strong> Alternative rock, indie, post-punk, noise rock, shoegaze, emo, emo revival, Midwest emo, and screamo; working with bass tabs and sound experimentation.</p>
-                <p><strong>Gaming:</strong> Retro gaming and rhythm games. Favorite titles: osu!, Guitar Hero, Hatsune Miku: Project DIVA, Taiko no Tatsujin, World of Warcraft (WoW), and Team Fortress 2 (TF2).</p>
+                <h2 data-i18n="int.h">INTERESTS & HOBBIES</h2>
+                <p data-i18n-html="int.music"><strong>Music:</strong> Alternative rock, indie, post-punk, noise rock, shoegaze, emo, emo revival, Midwest emo, and screamo; working with bass tabs and sound experimentation.</p>
+                <p data-i18n-html="int.gaming"><strong>Gaming:</strong> Retro gaming and rhythm games. Favorite titles: osu!, Guitar Hero, Hatsune Miku: Project DIVA, Taiko no Tatsujin, World of Warcraft (WoW), and Team Fortress 2 (TF2).</p>
             </section>
         </div>
     </div>
@@ -126,10 +126,14 @@
     <div class="taskbar">
         <button id="start-btn" class="start-btn">[ START ]</button>
         <div id="taskbar-windows" class="taskbar-windows"></div>
+        <div class="lang-switch" role="group" title="Language" data-i18n-title="lang.label">
+            <button type="button" class="lang-btn" data-lang="uk">UK</button><button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
         <div id="taskbar-clock" class="taskbar-clock">00:00:00</div>
     </div>
 
     <script src="songs.js"></script>
     <script src="script.js"></script>
+    <script src="i18n.js"></script>
 </body>
 </html>
