@@ -2,16 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>PORTFOLIO.EXE</title>
     <!-- Import VT323 pixel font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <!-- --- ТУТ ПІДКЛЮЧАЄТЬСЯ ТВІЙ HTML ФОН --- -->
-    <iframe src="lavalamp.html" class="background-frame"></iframe>
+    <iframe src="lavalamp.html" class="background-frame" title="Background animation" aria-hidden="true" tabindex="-1"></iframe>
 
     <!-- ===== Стейдж: вся композиція (іконки + вікна) центрується як єдине ціле ===== -->
     <div class="desktop-stage">
@@ -104,15 +106,15 @@
     <!-- ===== Іконки робочого столу ===== -->
     <!-- Іконки з твого спрайту icons/icons-sprite.png (3 x 15x15px, проміжок 3px) -->
     <div class="desktop-icons">
-        <div class="desktop-icon" data-target="os-window">
+        <div class="desktop-icon" data-target="os-window" tabindex="0" role="button">
             <span class="icon-frame"><span class="icon-img icon-about"></span></span>
             <span class="icon-label">ABOUT.TXT</span>
         </div>
-        <div class="desktop-icon" data-target="music-window">
+        <div class="desktop-icon" data-target="music-window" tabindex="0" role="button">
             <span class="icon-frame"><span class="icon-img icon-music"></span></span>
             <span class="icon-label">MUSIC.EXE</span>
         </div>
-        <div class="desktop-icon" data-target="links-window">
+        <div class="desktop-icon" data-target="links-window" tabindex="0" role="button">
             <span class="icon-frame"><span class="icon-img icon-links"></span></span>
             <span class="icon-label">LINKS.EXE</span>
         </div>

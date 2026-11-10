@@ -1,6 +1,15 @@
 // Универсальная логика для ЛЮБОГО количества окон .window
 const taskbarButtonByWindow = new Map();
 
+// Єдине джерело правди для "стекової" розкладки (вікна в потоці, без драгу).
+// ПОРІГ МАЄ ЗБІГАТИСЬ із `@media (max-width: 1150px)` у style.css.
+const STACKED_QUERY = '(max-width: 1150px)';
+const stackedMql = window.matchMedia ? window.matchMedia(STACKED_QUERY) : null;
+function isStackedLayout() {
+    // фолбек для браузерів без matchMedia — рахуємо по ширині вікна
+    return stackedMql ? stackedMql.matches : window.innerWidth <= 1150;
+}
+
 // Єдиний лічильник z-index для коректного "принести нагору" — важливо, коли
 // розгорнуто (maximized) одразу кілька вікон: без цього останнє в HTML
 // завжди перекривало б інші, незалежно від того, яке з них клікнули останнім.
@@ -27,7 +36,7 @@ document.querySelectorAll('.window').forEach((win) => {
 
     titleBar.addEventListener('mousedown', (e) => {
         if (e.target.tagName === 'BUTTON' || isMaximized) return;
-        if (window.innerWidth <= 768) return; // на телефоні вікна статичні, драг не потрібен
+        if (isStackedLayout()) return; // у стековій розкладці вікна статичні, драг не потрібен
 
         isDragging = true;
         document.body.classList.add('is-dragging');
@@ -175,7 +184,7 @@ function renderRandomPlaylist(count = 5) {
     });
 }
 renderRandomPlaylist();
-const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+const isTouchDevice = window.matchMedia ? window.matchMedia('(pointer: coarse)').matches : false;
 document.querySelectorAll('.desktop-icon').forEach((icon) => {
     const openTarget = () => {
         const win = document.getElementById(icon.dataset.target);
@@ -183,6 +192,22 @@ document.querySelectorAll('.desktop-icon').forEach((icon) => {
     };
     // на десктопі — подвійний клік (як у справжній ОС), на тачі — одинарний
     icon.addEventListener(isTouchDevice ? 'click' : 'dblclick', openTarget);
+
+    // гібриди (ноутбук-трансформер: основний вказівник — миша, але є й тачскрін):
+    // дотик пальцем відкриває одним тапом, миша лишається на подвійному кліку
+    if (!isTouchDevice && 'PointerEvent' in window) {
+        icon.addEventListener('pointerup', (e) => {
+            if (e.pointerType === 'touch') openTarget();
+        });
+    }
+
+    // клавіатура: іконки фокусуються через Tab, Enter/Space відкривають
+    icon.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+            e.preventDefault();
+            openTarget();
+        }
+    });
 });
 
 // ==== Автоматичне позиціювання MUSIC.EXE одразу під LINKS.EXE ====
@@ -194,7 +219,7 @@ function stackMusicBelowLinks() {
     const linksWin = document.getElementById('links-window');
     const musicWin = document.getElementById('music-window');
     if (!linksWin || !musicWin) return;
-    if (window.innerWidth <= 768) return; // на телефоні вікна й так у стеку по потоку документа
+    if (isStackedLayout()) return; // у стековій розкладці вікна й так у стеку по потоку документа
     if (linksWin.style.display === 'none') return; // LINKS.EXE закрите — нема від чого рахувати
     if (linksWin.classList.contains('maximized')) return; // LINKS.EXE на весь екран — його offsetHeight це 100vh, а не реальний розмір
 
@@ -210,3 +235,10 @@ if (document.fonts && document.fonts.ready) {
 }
 window.addEventListener('load', stackMusicBelowLinks);
 window.addEventListener('resize', stackMusicBelowLinks);
+
+// перехід між стековою й десктопною розкладкою (поворот екрана, зум, масштаб ОС):
+// перерахувати позицію MUSIC.EXE, бо в стековому режимі функція виходила раніше
+if (stackedMql) {
+    if (stackedMql.addEventListener) stackedMql.addEventListener('change', stackMusicBelowLinks);
+    else if (stackedMql.addListener) stackedMql.addListener(stackMusicBelowLinks); // Safari < 14
+}
