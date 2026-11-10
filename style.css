@@ -1,3 +1,19 @@
+@font-face {
+    font-family: 'Tiny5 Mono';
+    src: url('fonts/Tiny5Mono-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Tiny5 Mono';
+    src: url('fonts/Tiny5Mono-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* --- Safe-area (вирізи/«чілка» iOS, жестові панелі Android) + висота таскбару ---
    Значення за замовчуванням 0px; справжні env() підставляються лише там, де браузер їх підтримує
    (інакше невалідний env() у custom property зламав би calc() нижче). */
@@ -36,7 +52,7 @@ body {
 body {
     background-color: #0D0D15;
     color: #ac3232;
-    font-family: 'VT323', monospace;
+    font-family: 'Tiny5 Mono', monospace;
     margin: 0;
     padding: 0 0 50px 0; /* місце під таскбар знизу */
     padding-bottom: calc(var(--taskbar-h) + var(--sab));
@@ -135,7 +151,7 @@ body.is-dragging .background-frame {
     background: #0D0D15;
     color: #ac3232;
     border: 3px solid transparent;
-    font-family: 'VT323', monospace;
+    font-family: 'Tiny5 Mono', monospace;
     font-size: 1rem;
     cursor: pointer;
     padding: 2px 6px;
@@ -393,7 +409,7 @@ ul {
     background: #0D0D15;
     color: #ac3232;
     border: 3px solid #ac3232;
-    font-family: 'VT323', monospace;
+    font-family: 'Tiny5 Mono', monospace;
     font-size: 1.1rem;
     padding: 6px 16px;
     cursor: pointer;
@@ -428,7 +444,7 @@ ul {
     background: #0D0D15;
     color: #ac3232;
     border: 2px solid #ac3232;
-    font-family: 'VT323', monospace;
+    font-family: 'Tiny5 Mono', monospace;
     font-size: 1rem;
     padding: 5px 10px;
     cursor: pointer;
@@ -792,7 +808,7 @@ ul {
     background: #0D0D15;
     color: #ac3232;
     border: 2px solid #ac3232;
-    font-family: 'VT323', monospace;
+    font-family: 'Tiny5 Mono', monospace;
     font-size: 1.1rem;
     padding: 4px 8px;
     cursor: pointer;

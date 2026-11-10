@@ -284,7 +284,7 @@ document.querySelectorAll('.desktop-icon').forEach((icon) => {
 
 // ==== Автоматичне позиціювання MUSIC.EXE одразу під LINKS.EXE ====
 // Фіксований "top" у CSS ненадійний: реальна висота LINKS.EXE залежить від
-// того, як саме браузер відрендерив шрифт VT323, і може відрізнятись —
+// того, як саме браузер відрендерив шрифт Tiny5 Mono, і може відрізнятись —
 // тому вікна або злипались, або перекривались. Тут рахуємо позицію
 // по факту вже готового вікна LINKS.EXE, з фіксованим відступом між ними.
 function stackMusicBelowLinks() {
@@ -299,7 +299,7 @@ function stackMusicBelowLinks() {
     musicWin.style.top = `${linksWin.offsetTop + linksWin.offsetHeight + gap}px`;
 }
 
-// рахуємо одразу, і ще раз коли шрифт VT323 повністю завантажиться
+// рахуємо одразу, і ще раз коли шрифт Tiny5 Mono повністю завантажиться
 // (до цього моменту висота тексту може бути іншою — з фолбек-шрифтом)
 layoutDesktop();
 if (document.fonts && document.fonts.ready) {
