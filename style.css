@@ -36,6 +36,7 @@
 
 /* Safari/iOS не змінює розмір тексту при повороті екрана */
 html {
+    font-size: 15px; /* було 16px (за замовчуванням); усі rem масштабуються разом */
     -webkit-text-size-adjust: 100%;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
@@ -340,7 +341,7 @@ ul {
 .desktop-icon {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center; /* іконка й підпис по центру клітинки, а не притиснуті праворуч */
     width: 80px;
     cursor: pointer;
     -webkit-user-select: none;
@@ -360,11 +361,11 @@ ul {
     }
 }
 
-/* Спрайт: icons/icons-sprite.png — 3 іконки по 15x15px, проміжок 3px (51x15 всього) */
+/* Спрайт: icons/icons-sprite.png — 3 комірки по 17x15px, іконка по центру комірки (51x15 всього) */
 .icon-img {
-    --icon-scale: 3; /* у скільки разів збільшуємо 15px іконку (3 = 45px) */
+    --icon-scale: 3; /* у скільки разів збільшуємо комірку 17x15 (3 = 51x45px) */
     display: block;
-    width: calc(15px * var(--icon-scale));
+    width: calc(17px * var(--icon-scale));
     height: calc(15px * var(--icon-scale));
     background-image: url('icons/icons-sprite.png');
     background-repeat: no-repeat;
@@ -376,13 +377,14 @@ ul {
 }
 
 .icon-about { background-position: 0 0; }
-.icon-music { background-position: calc(-18px * var(--icon-scale)) 0; }
-.icon-links { background-position: calc(-36px * var(--icon-scale)) 0; }
+.icon-music { background-position: calc(-17px * var(--icon-scale)) 0; }
+.icon-links { background-position: calc(-34px * var(--icon-scale)) 0; }
 
 .icon-label {
     margin-top: 4px;
     font-size: 0.95rem;
-    text-align: right;
+    text-align: center;
+    white-space: nowrap;
     text-transform: uppercase;
     line-height: 1.2;
 }

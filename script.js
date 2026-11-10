@@ -63,6 +63,34 @@ function fitWindow(win) {
     win.style.maxHeight = `${Math.max(MIN_VISIBLE_H, Math.floor(room))}px`;
 }
 
+// Композиція: верхні краї OS-вікна й колонки LINKS+MUSIC на одній лінії, а вся група
+// по вертикалі по центру доступної області. Не чіпаємо, якщо користувач уже щось перетягнув.
+const STACK_GAP = 12; // відступ між LINKS.EXE і MUSIC.EXE, px
+let userMovedWindows = false;
+function composeDesktop() {
+    if (userMovedWindows) return;
+    const os = document.getElementById('os-window');
+    const links = document.getElementById('links-window');
+    const music = document.getElementById('music-window');
+    if (!os || !links || !music) return;
+    const all = [os, links, music];
+    if (all.some((w) => w.classList.contains('maximized'))) return;
+
+    all.forEach((w) => { w.style.maxHeight = ''; }); // міряємо природну висоту
+    const h = (w) => (w.style.display === 'none' ? 0 : w.offsetHeight);
+    const linksH = h(links), musicH = h(music);
+    const colH = linksH + (linksH && musicH ? STACK_GAP : 0) + musicH;
+    const groupH = Math.max(h(os), colH);
+
+    const stage = os.offsetParent;
+    const sr = stage ? stage.getBoundingClientRect() : { top: 0 };
+    const b = getBounds();
+    const availH = b.bottom - b.top;
+    const top = b.top - sr.top + Math.max(0, Math.round((availH - groupH) / 2));
+    os.style.top = `${top}px`;
+    links.style.top = `${top}px`;
+}
+
 // Повна розкладка: підігнати всі вікна, а MUSIC.EXE поставити під LINKS.EXE вже після підгонки LINKS
 function layoutDesktop() {
     const wins = Array.from(document.querySelectorAll('.window'));
@@ -70,6 +98,7 @@ function layoutDesktop() {
         wins.forEach((w) => { w.style.maxHeight = ''; });
         return;
     }
+    composeDesktop();
     wins.filter((w) => w.id !== 'music-window').forEach(fitWindow);
     stackMusicBelowLinks();
     const musicWin = document.getElementById('music-window');
@@ -105,6 +134,7 @@ document.querySelectorAll('.window').forEach((win) => {
         if (isStackedLayout()) return; // у стековій розкладці вікна статичні, драг не потрібен
 
         isDragging = true;
+        userMovedWindows = true; // далі не перекомпоновуємо вікна автоматично
         document.body.classList.add('is-dragging');
 
         startX = e.clientX;
@@ -295,7 +325,7 @@ function stackMusicBelowLinks() {
     if (linksWin.style.display === 'none') return; // LINKS.EXE закрите — нема від чого рахувати
     if (linksWin.classList.contains('maximized')) return; // LINKS.EXE на весь екран — його offsetHeight це 100vh, а не реальний розмір
 
-    const gap = 20; // відступ між LINKS.EXE і MUSIC.EXE, px
+    const gap = STACK_GAP;
     musicWin.style.top = `${linksWin.offsetTop + linksWin.offsetHeight + gap}px`;
 }
 
