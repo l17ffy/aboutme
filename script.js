@@ -10,6 +10,72 @@ function isStackedLayout() {
     return stackedMql ? stackedMql.matches : window.innerWidth <= 1150;
 }
 
+// ==== Вікна не виходять за межі екрана (десктопна розкладка) ====
+// Доступна область = viewport мінус таскбар. Вікно або зсувається в її межі
+// (перетягування), або обмежується по висоті (max-height) з внутрішнім скролом.
+const EDGE_GAP = 8;       // мінімальний відступ від країв, px
+const MIN_VISIBLE_H = 140; // менше цього вікно не стискаємо — краще підняти вище
+
+function getBounds() {
+    const de = document.documentElement;
+    const taskbar = document.querySelector('.taskbar');
+    const taskbarH = taskbar ? taskbar.offsetHeight : 0;
+    return {
+        left: EDGE_GAP,
+        top: EDGE_GAP,
+        right: de.clientWidth - EDGE_GAP,
+        bottom: de.clientHeight - taskbarH - EDGE_GAP
+    };
+}
+
+// left/top — у координатах стейджа (offsetParent), w/h — розмір, який має поміститись
+function clampToViewport(win, left, top, w, h) {
+    const stage = win.offsetParent;
+    const sr = stage ? stage.getBoundingClientRect() : { left: 0, top: 0 };
+    const b = getBounds();
+    const minL = b.left - sr.left;
+    const minT = b.top - sr.top;
+    const maxL = Math.max(minL, b.right - sr.left - w);
+    const maxT = Math.max(minT, b.bottom - sr.top - h);
+    return {
+        left: Math.min(Math.max(left, minL), maxL),
+        top: Math.min(Math.max(top, minT), maxT)
+    };
+}
+
+function fitWindow(win) {
+    if (isStackedLayout() || win.classList.contains('maximized') || win.style.display === 'none') {
+        win.style.maxHeight = ''; // у стеку/розгорнутому вигляді висотою керує CSS
+        return;
+    }
+
+    win.style.maxHeight = ''; // міряємо природну висоту
+    // не зсуваємо вікно вгору заради повної висоти — його стискає max-height;
+    // піднімаємо лише якщо під ним лишається менше MIN_VISIBLE_H
+    const h = Math.min(win.offsetHeight, MIN_VISIBLE_H);
+    const pos = clampToViewport(win, win.offsetLeft, win.offsetTop, win.offsetWidth, h);
+    win.style.left = `${pos.left}px`;
+    win.style.top = `${pos.top}px`;
+
+    const stage = win.offsetParent;
+    const sr = stage ? stage.getBoundingClientRect() : { top: 0 };
+    const room = getBounds().bottom - (sr.top + pos.top);
+    win.style.maxHeight = `${Math.max(MIN_VISIBLE_H, Math.floor(room))}px`;
+}
+
+// Повна розкладка: підігнати всі вікна, а MUSIC.EXE поставити під LINKS.EXE вже після підгонки LINKS
+function layoutDesktop() {
+    const wins = Array.from(document.querySelectorAll('.window'));
+    if (isStackedLayout()) {
+        wins.forEach((w) => { w.style.maxHeight = ''; });
+        return;
+    }
+    wins.filter((w) => w.id !== 'music-window').forEach(fitWindow);
+    stackMusicBelowLinks();
+    const musicWin = document.getElementById('music-window');
+    if (musicWin) fitWindow(musicWin);
+}
+
 // Єдиний лічильник z-index для коректного "принести нагору" — важливо, коли
 // розгорнуто (maximized) одразу кілька вікон: без цього останнє в HTML
 // завжди перекривало б інші, незалежно від того, яке з них клікнули останнім.
@@ -62,8 +128,10 @@ document.querySelectorAll('.window').forEach((win) => {
             const deltaX = e.clientX - startX;
             const deltaY = e.clientY - startY;
 
-            win.style.left = `${startLeft + deltaX}px`;
-            win.style.top = `${startTop + deltaY}px`;
+            // обмежуємо координати так, щоб вікно цілком лишалось у видимій області
+            const pos = clampToViewport(win, startLeft + deltaX, startTop + deltaY, win.offsetWidth, win.offsetHeight);
+            win.style.left = `${pos.left}px`;
+            win.style.top = `${pos.top}px`;
         });
     });
 
@@ -76,6 +144,8 @@ document.querySelectorAll('.window').forEach((win) => {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
+
+            fitWindow(win); // перерахувати max-height під нову позицію (вікно може знову розтягнутись)
         }
     });
 
@@ -86,8 +156,8 @@ document.querySelectorAll('.window').forEach((win) => {
         win.classList.toggle('maximized');
         bringToFront(win); // розгорнуте вікно завжди має бути видимим над іншими
 
-        // якщо (роз)згорнули LINKS.EXE — перерахувати позицію MUSIC.EXE під ним
-        stackMusicBelowLinks();
+        // після (роз)горнання: підігнати вікна під екран і перерахувати позицію MUSIC.EXE під LINKS.EXE
+        layoutDesktop();
     });
 
     // ЗАКРИТТЯ: вікно ховаємо, але кнопка на таскбарі ЗАЛИШАЄТЬСЯ — просто тьмяніє
@@ -108,6 +178,8 @@ function focusWindow(win) {
 
     const taskbarBtn = taskbarButtonByWindow.get(win);
     if (taskbarBtn) taskbarBtn.classList.remove('is-closed');
+
+    layoutDesktop(); // щойно показане вікно має вміститись в екран
 }
 
 function buildTaskbarButtons() {
@@ -155,7 +227,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
         const taskbarBtn = taskbarButtonByWindow.get(win);
         if (taskbarBtn) taskbarBtn.classList.remove('is-closed');
     });
-    stackMusicBelowLinks(); // якщо LINKS.EXE щойно з'явилось знову — перерахувати позицію MUSIC.EXE
+    layoutDesktop(); // підігнати вікна й, якщо LINKS.EXE щойно з'явилось знову, перерахувати позицію MUSIC.EXE
 });
 
 // ==== MUSIC.EXE: рандомний плейлист ====
@@ -229,16 +301,17 @@ function stackMusicBelowLinks() {
 
 // рахуємо одразу, і ще раз коли шрифт VT323 повністю завантажиться
 // (до цього моменту висота тексту може бути іншою — з фолбек-шрифтом)
-stackMusicBelowLinks();
+layoutDesktop();
 if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(stackMusicBelowLinks);
+    document.fonts.ready.then(layoutDesktop);
 }
-window.addEventListener('load', stackMusicBelowLinks);
-window.addEventListener('resize', stackMusicBelowLinks);
+window.addEventListener('load', layoutDesktop);
+window.addEventListener('resize', layoutDesktop); // зум, масштаб ОС, зміна розміру вікна браузера
+window.addEventListener('orientationchange', layoutDesktop);
 
 // перехід між стековою й десктопною розкладкою (поворот екрана, зум, масштаб ОС):
 // перерахувати позицію MUSIC.EXE, бо в стековому режимі функція виходила раніше
 if (stackedMql) {
-    if (stackedMql.addEventListener) stackedMql.addEventListener('change', stackMusicBelowLinks);
-    else if (stackedMql.addListener) stackedMql.addListener(stackMusicBelowLinks); // Safari < 14
+    if (stackedMql.addEventListener) stackedMql.addEventListener('change', layoutDesktop);
+    else if (stackedMql.addListener) stackedMql.addListener(layoutDesktop); // Safari < 14
 }
